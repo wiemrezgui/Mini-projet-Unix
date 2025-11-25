@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
                ntohs(client_addr.sin_port));
         
         // Conversion du nombre reçu
-        n = atoi(buffer);
+        n = atoi(buffer); // Convertit la chaîne en nombre
         printf(" [ SERVER ] Nombre reçu: %d\n", n);
         
         // Vérification que n est valide
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
             memset(buffer, 0, BUFFER_SIZE);
             
             for (i = 0; i < n; i++) {
-                int nombre_aleatoire = rand() % 1000 + 1; // Nombres entre 1 et 1000
+                int nombre_aleatoire = rand() % NMAX + 1; // Nombres entre 1 et NMAX
                 char temp[50];
                 sprintf(temp, "%d", nombre_aleatoire);
                 

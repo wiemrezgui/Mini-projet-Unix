@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[]) {
     int sockfd;
-    struct sockaddr_in serveur_addr;
+    struct sockaddr_in server_addr;
     char buffer[BUFFER_SIZE];
     int n;
     socklen_t len;
@@ -47,18 +47,18 @@ int main(int argc, char *argv[]) {
     printf("[ CLIENT ] Socket créé avec succès\n");
     
     // Configuration de l'adresse du serveur
-    memset(&serveur_addr, 0, sizeof(serveur_addr));
-    serveur_addr.sin_family = AF_INET;
-    serveur_addr.sin_port = htons(server_port);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_port);
     
     // Conversion de l'adresse IP
-    if (inet_pton(AF_INET, server_address, &serveur_addr.sin_addr) <= 0) {
-        perror(" [ CLIENT ]Erreur d'adresse IP invalide");
+    if (inet_pton(AF_INET, server_address, &server_addr.sin_addr) <= 0) {
+        perror(" [ CLIENT ] Erreur d'adresse IP invalide");
         close(sockfd);
         exit(EXIT_FAILURE);
     }
     
-    len = sizeof(serveur_addr);
+    len = sizeof(server_addr);
     
     // Boucle pour permettre plusieurs requêtes
     do {
@@ -66,13 +66,13 @@ int main(int argc, char *argv[]) {
         n = rand() % NMAX + 1;
         printf("\n═══════════════════════════════════════════\n");
         printf(" [ CLIENT ] Requête vers %s:%d\n", server_address, server_port);
-        printf("[ CLIENT ] Envoi du nombre n=%d au serveur...\n", n);
+        printf(" [ CLIENT ] Envoi du nombre n=%d au serveur...\n", n);
         
         // Envoi du nombre n au serveur
         sprintf(buffer, "%d", n);
         
         if (sendto(sockfd, buffer, strlen(buffer), 0, 
-                   (struct sockaddr *)&serveur_addr, len) < 0) {
+                   (struct sockaddr *)&server_addr, len) < 0) {
             perror("[ CLIENT ] Erreur lors de l'envoi");
             close(sockfd);
             exit(EXIT_FAILURE);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
         // Réception de la réponse du serveur
         memset(buffer, 0, BUFFER_SIZE);
         int recv_len = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, 
-                                (struct sockaddr *)&serveur_addr, &len);
+                                (struct sockaddr *)&server_addr, &len);
         
         if (recv_len < 0) {
             perror("[ CLIENT ] Erreur lors de la réception");
