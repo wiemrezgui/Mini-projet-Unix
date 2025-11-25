@@ -45,7 +45,7 @@ void add_users() {
     printf("\n %d utilisateurs créés dans %s\n\n", nbr_clients, USERS_FILE);
 }
 
-// Fonction pour lister les fichiers d'un répertoire
+// Fonction pour lister les fichiers d'un répertoire (sans . et ..)
 void list_directory_files(const char* dir_path, char* buffer) {
     DIR *dir;
     struct dirent *entry;
@@ -63,6 +63,11 @@ void list_directory_files(const char* dir_path, char* buffer) {
     offset = strlen(buffer);
     
     while ((entry = readdir(dir)) != NULL) {
+        // FILTRER : ignorer les entrées . et ..
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue; // Passer à l'itération suivante
+        }
+        
         snprintf(buffer + offset, BUFFER_SIZE - offset, "- %s\n", entry->d_name);
         offset = strlen(buffer);
         
@@ -74,7 +79,6 @@ void list_directory_files(const char* dir_path, char* buffer) {
     
     closedir(dir);
 }
-
 // Gestionnaire pour éviter les processus zombies
 void sigchld_handler(int sig) {
     while (waitpid(-1, NULL, WNOHANG) > 0);
