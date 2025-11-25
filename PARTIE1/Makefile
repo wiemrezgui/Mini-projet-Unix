@@ -81,4 +81,6 @@ help:
 	@echo " Exemples:"
 	@echo "  make run-server ADDR=127.0.0.1 PORT=5000"
 	@echo "  make run-server ADDR=0.0.0.0 PORT=8080"
-	@echo "  make run-client"
+
+# Indique que ces règles ne correspondent pas à des fichiers
+.PHONY: all clean client server run-server run-client test help
