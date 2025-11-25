@@ -9,7 +9,7 @@
 #include <signal.h>
 #include "common.h"
 
-// Fonction pour créer les utilisateurs via terminal
+// Fonction pour créer les utilisateurs
 void add_users() {
     int nbr_clients;
     char username[MAX_USERNAME_LEN];
@@ -45,7 +45,7 @@ void add_users() {
     printf("\n %d utilisateurs créés dans %s\n\n", nbr_clients, USERS_FILE);
 }
 
-// Fonction pour lister les fichiers d'un répertoire (sans . et ..)
+// Fonction pour lister les fichiers d'un répertoire
 void list_directory_files(const char* dir_path, char* buffer) {
     DIR *dir;
     struct dirent *entry;
@@ -129,11 +129,11 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                     authenticated = 1;
                     char* success_msg = "AUTH_SUCCESS: Authentification réussie! Envoyez un nom de répertoire";
                     send(client_socket, success_msg, strlen(success_msg), 0);
-                    printf("[SERVER] ✅ %s authentifié\n", username);
+                    printf("[SERVER] %s authentifié\n", username);
                 } else {
                     char* error_msg = "AUTH_FAILED: Identifiants incorrects";
                     send(client_socket, error_msg, strlen(error_msg), 0);
-                    printf("[SERVER] ❌ Echec auth pour %s\n", user);
+                    printf("[SERVER]  Echec auth pour %s\n", user);
                 }
             }
         } else {
@@ -277,6 +277,7 @@ int main(int argc, char *argv[]) {
             // PROCESSUS PÈRE
             close(client_socket);
             printf("[SERVER] Nouveau processus (PID: %d) pour client\n", pid);
+            printf("=================================\n\n");
         } else {
             perror("[SERVER] Erreur fork");
             close(client_socket);
