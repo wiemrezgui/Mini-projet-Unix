@@ -9,7 +9,7 @@
 #include "common.h"
 
 int main(int argc, char *argv[]) {
-    int sockfd;
+    int socketfd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
     char buffer[BUFFER_SIZE];
@@ -20,20 +20,19 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s <adresse> <port>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    
     port = atoi(argv[2]);
     
     // Initialisation du générateur de nombres aléatoires
     srand(time(NULL));
     
     // Création du socket UDP
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0) {
-        perror("Erreur lors de la création du socket");
+    socketfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socketfd < 0) {
+        perror(" [ SERVER ] Erreur lors de la création du socket");
         exit(EXIT_FAILURE);
     }
     
-    printf("Socket créé avec succès\n");
+    printf(" [ SERVER ] Socket créé avec succès\n");
     
     // Configuration de l'adresse du serveur
     memset(&server_addr, 0, sizeof(server_addr));
@@ -42,32 +41,32 @@ int main(int argc, char *argv[]) {
     
     // Conversion de l'adresse IP
     if (inet_pton(AF_INET, argv[1], &server_addr.sin_addr) <= 0) {
-        perror("Erreur d'adresse IP invalide");
-        close(sockfd);
+        perror(" [ SERVER ] Erreur d'adresse IP invalide");
+        close(socketfd);
         exit(EXIT_FAILURE);
     }
     
     // Liaison du socket à l'adresse et au port
-    if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Erreur lors du bind");
-        close(sockfd);
+    if (bind(socketfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror(" [ SERVER ] Erreur lors du bind");
+        close(socketfd);
         exit(EXIT_FAILURE);
     }
     
-    printf("Serveur en écoute sur %s:%s...\n\n", argv[1], argv[2]);
+    printf(" [ SERVER ] Serveur en écoute sur %s:%s...\n\n", argv[1], argv[2]);
     
     // Enregistrement des informations du serveur dans un fichier
     FILE *info_file = fopen(SERVER_INFO_FILE, "w");
     if (info_file == NULL) {
-        perror("Erreur lors de la création du fichier d'information");
-        close(sockfd);
+        perror(" [ SERVER ] Erreur lors de la création du fichier d'information");
+        close(socketfd);
         exit(EXIT_FAILURE);
     }
     
     fprintf(info_file, "%s %s", argv[1], argv[2]);
     fclose(info_file);
     
-    printf("Informations du serveur enregistrées dans %s\n", SERVER_INFO_FILE);
+    printf("[ SERVER ] Informations du serveur enregistrées dans %s\n", SERVER_INFO_FILE);
     
     // Boucle principale du serveur
     while (1) {
@@ -75,7 +74,7 @@ int main(int argc, char *argv[]) {
         client_len = sizeof(client_addr);
         
         // Réception du message du client
-        int recv_len = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
+        int recv_len = recvfrom(socketfd, buffer, BUFFER_SIZE, 0,
                                 (struct sockaddr *)&client_addr, &client_len);
         
         if (recv_len < 0) {
@@ -86,17 +85,17 @@ int main(int argc, char *argv[]) {
         buffer[recv_len] = '\0';
         
         // Affichage des informations du client
-        printf("Message reçu de %s:%d\n", 
+        printf(" [ SERVER ] Message reçu de %s:%d\n", 
                inet_ntoa(client_addr.sin_addr), 
                ntohs(client_addr.sin_port));
         
         // Conversion du nombre reçu
         n = atoi(buffer);
-        printf("Nombre reçu: %d\n", n);
+        printf(" [ SERVER ] Nombre reçu: %d\n", n);
         
         // Vérification que n est valide
         if (n < 1 || n > NMAX) {
-            sprintf(buffer, "Erreur: n doit être entre 1 et %d", NMAX);
+            sprintf(buffer, " [ SERVER ] Erreur: n doit être entre 1 et %d", NMAX);
         } else {
             // Génération de n nombres aléatoires
             memset(buffer, 0, BUFFER_SIZE);
@@ -116,17 +115,17 @@ int main(int argc, char *argv[]) {
         }
         
         // Envoi de la réponse au client
-        if (sendto(sockfd, buffer, strlen(buffer), 0,
+        if (sendto(socketfd, buffer, strlen(buffer), 0,
                    (struct sockaddr *)&client_addr, client_len) < 0) {
-            perror("Erreur lors de l'envoi");
+            perror(" [ SERVER ] Erreur lors de l'envoi");
         } else {
-            printf("Réponse envoyée au client: %s\n", buffer);
+            printf(" [ SERVER ] Réponse envoyée au client: %s\n", buffer);
         }
         
         printf("------------------------------------\n\n");
     }
     
-    close(sockfd);
+    close(socketfd);
     // Supprimer le fichier d'information à la fermeture
     remove(SERVER_INFO_FILE);
     return 0;
