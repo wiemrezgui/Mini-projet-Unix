@@ -61,31 +61,49 @@ void send_menu(int client_socket) {
 
 // Fonction pour relayer la requête vers un serveur spécialisé
 int relay_to_server(int port, const char* request, char* response) {
-    int server_socket;
+      int server_socket;
     struct sockaddr_in server_addr;
     
+    // Créer socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket < 0) return -1;
+    if (server_socket < 0) {
+        return -1;
+    }
     
+    // Configurer timeout de connexion
+    struct timeval timeout;
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+    setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    setsockopt(server_socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    
+    // Configuration adresse serveur spécialisé
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     
+    // Connexion au serveur spécialisé
     if (connect(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         close(server_socket);
-        snprintf(response, BUFFER_SIZE, "Erreur: Service indisponible (port %d)", port);
         return -1;
     }
     
     // Envoyer la requête
-    send(server_socket, request, strlen(request), 0);
+    if (send(server_socket, request, strlen(request), 0) < 0) {
+        close(server_socket);
+        return -1;
+    }
     
     // Recevoir la réponse
     memset(response, 0, BUFFER_SIZE);
-    int bytes = recv(server_socket, response, BUFFER_SIZE - 1, 0);
-    response[bytes] = '\0';
+    int bytes_received = recv(server_socket, response, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        close(server_socket);
+        return -1;
+    }
     
+    response[bytes_received] = '\0';
     close(server_socket);
     return 0;
 }
@@ -140,7 +158,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
         }
     }
     
-    // BOUCLE DE SERVICE
+    // BOUCLE DE SERVICE - CORRIGÉE
     int active = 1;
     while (active) {
         send_menu(client_socket);
@@ -154,71 +172,94 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
         
         char response[BUFFER_SIZE];
         int target_port = 0;
+        char service_request[BUFFER_SIZE];
         
         if (strcmp(buffer, "1") == 0) {
+            // SERVICE DATE 
             target_port = PORT_DATE;
-            send(client_socket, "RESULT", 6, 0);
-            usleep(10000);
-            
-            relay_to_server(target_port, "GET_DATE", response);
-            send(client_socket, response, strlen(response), 0);
+            if (relay_to_server(target_port, "GET_DATE", response) == 0) {
+                send(client_socket, response, strlen(response), 0);
+            } else {
+                send(client_socket, " Service DATE indisponible", 28, 0);
+            }
             
         } else if (strcmp(buffer, "2") == 0) {
+            // SERVICE LISTE FICHIERS - 
             target_port = PORT_FICHIERS;
-            send(client_socket, "PROMPT", 6, 0);
-            usleep(10000);
-            send(client_socket, "Entrez le répertoire: ", 23, 0);
             
+            // Demander le répertoire
+            send(client_socket, "PROMPT:Entrez le répertoire:", 28, 0);
+            
+            // Recevoir le répertoire
             memset(buffer, 0, BUFFER_SIZE);
             bytes = recv(client_socket, buffer, BUFFER_SIZE, 0);
             if (bytes > 0) {
                 buffer[bytes] = '\0';
-                relay_to_server(target_port, buffer, response);
-                send(client_socket, response, strlen(response), 0);
+                
+                // Préparer la requête pour le serveur fichiers
+                snprintf(service_request, BUFFER_SIZE, "LIST %s", buffer);
+                
+                if (relay_to_server(target_port, service_request, response) == 0) {
+                    send(client_socket, response, strlen(response), 0);
+                } else {
+                    send(client_socket, " Service FICHIERS indisponible", 32, 0);
+                }
             }
             
         } else if (strcmp(buffer, "3") == 0) {
+            // SERVICE CONTENU FICHIER - 
             target_port = PORT_CONTENU;
-            send(client_socket, "PROMPT", 6, 0);
-            usleep(10000);
-            send(client_socket, "Entrez le fichier: ", 20, 0);
             
+            // Demander le fichier
+            send(client_socket, "PROMPT:Entrez le fichier:", 25, 0);
+            
+            // Recevoir le fichier
             memset(buffer, 0, BUFFER_SIZE);
             bytes = recv(client_socket, buffer, BUFFER_SIZE, 0);
             if (bytes > 0) {
                 buffer[bytes] = '\0';
-                relay_to_server(target_port, buffer, response);
-                send(client_socket, response, strlen(response), 0);
+                
+                // Préparer la requête pour le serveur contenu
+                snprintf(service_request, BUFFER_SIZE, "GET %s", buffer);
+                
+                if (relay_to_server(target_port, service_request, response) == 0) {
+                    send(client_socket, response, strlen(response), 0);
+                } else {
+                    send(client_socket, " Service CONTENU indisponible", 31, 0);
+                }
             }
             
         } else if (strcmp(buffer, "4") == 0) {
+            // SERVICE STATS
             target_port = PORT_STATS;
-            send(client_socket, "RESULT", 6, 0);
-            usleep(10000);
             
+            // Préparer la durée
             time_t current = time(NULL);
             double elapsed = difftime(current, connection_start);
-            snprintf(buffer, BUFFER_SIZE, "%.0f", elapsed);
+            snprintf(service_request, BUFFER_SIZE, "TIME %.0f", elapsed);
             
-            relay_to_server(target_port, buffer, response);
-            send(client_socket, response, strlen(response), 0);
+            if (relay_to_server(target_port, service_request, response) == 0) {
+                send(client_socket, response, strlen(response), 0);
+            } else {
+                send(client_socket, " Service STATS indisponible", 29, 0);
+            }
             
         } else if (strcmp(buffer, "5") == 0) {
-            send(client_socket, "QUIT_ACK", 8, 0);
-            usleep(10000);
-            send(client_socket, "Au revoir!", 10, 0);
+            // QUIT
+            send(client_socket, "QUIT:Au revoir!", 15, 0);
             active = 0;
         } else {
-            send(client_socket, "ERROR", 5, 0);
-            usleep(10000);
-            send(client_socket, "Choix invalide", 15, 0);
+            // ERREUR 
+            send(client_socket, "ERROR:Choix invalide", 21, 0);
         }
+        
+        // Petite pause pour éviter les conflits
+        usleep(50000); // 50ms
     }
     
     close(client_socket);
     printf("[SERVER] %s déconnecté\n\n", username);
 }
-
 int main(int argc, char *argv[]) {
     int proxy_socket, client_socket;
     struct sockaddr_in proxy_addr, client_addr;

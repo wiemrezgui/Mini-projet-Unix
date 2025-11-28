@@ -19,7 +19,7 @@ int main() {
     printf("║       CLIENT TCP                                 ║\n");
     printf("╚══════════════════════════════════════════════════╝\n\n");
 
-    // Lecture des infos du serveur depuis server_info.txt
+    // Lecture des infos du serveur
     FILE *info_file = fopen(SERVER_INFO_FILE, "r");
     if (info_file == NULL) {
         perror("[CLIENT] Fichier server_info.txt introuvable");
@@ -34,8 +34,7 @@ int main() {
     }
     fclose(info_file);
 
-    printf("[CLIENT] Serveur cible: %s:%d (depuis %s)\n", 
-           server_address, server_port, SERVER_INFO_FILE);
+    printf("[CLIENT] Serveur cible: %s:%d\n", server_address, server_port);
 
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0) {
@@ -67,7 +66,7 @@ int main() {
     scanf("%s", username);
     printf("Password: ");
     scanf("%s", password);
-    getchar();
+    getchar(); // Vider le buffer
     
     snprintf(buffer, BUFFER_SIZE, "AUTH:%s:%s", username, password);
     send(client_socket, buffer, strlen(buffer), 0);
@@ -78,17 +77,17 @@ int main() {
     if (bytes_received > 0) {
         buffer[bytes_received] = '\0';
         
-        if (strstr(buffer, "AUTH_SUCCESS") != NULL) {
+        if (strcmp(buffer, "AUTH_SUCCESS") == 0) {
             authenticated = 1;
             printf("\n[CLIENT]  Authentification réussie!\n");
         } else {
-            printf("\n[CLIENT] ✗ %s\n", buffer);
+            printf("\n[CLIENT] ✗ Authentification échouée\n");
             close(client_socket);
             return 1;
         }
     }
 
-    // BOUCLE DE SERVICES
+    // BOUCLE DE SERVICES 
     if (authenticated) {
         while (1) {
             // Recevoir le menu
@@ -105,27 +104,14 @@ int main() {
             
             // Lire le choix
             char choice[10];
+            printf("> ");
             fgets(choice, sizeof(choice), stdin);
             choice[strcspn(choice, "\n")] = 0;
             
             // Envoyer le choix
             send(client_socket, choice, strlen(choice), 0);
             
-            // Si QUIT
-            if (strcmp(choice, "5") == 0 || strcmp(choice, "QUIT") == 0) {
-                memset(buffer, 0, BUFFER_SIZE);
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                
-                memset(buffer, 0, BUFFER_SIZE);
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0';
-                    printf("\n%s\n", buffer);
-                }
-                break;
-            }
-            
-            // Recevoir le signal
+            // Recevoir la réponse
             memset(buffer, 0, BUFFER_SIZE);
             bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
             
@@ -136,32 +122,20 @@ int main() {
             
             buffer[bytes_received] = '\0';
             
-            // Traiter selon le signal
-            if (strcmp(buffer, "PROMPT") == 0) {
-                // Recevoir le prompt
-                memset(buffer, 0, BUFFER_SIZE);
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0';
-                    printf("\n%s", buffer);
-                    
-                    char input[BUFFER_SIZE];
-                    fgets(input, sizeof(input), stdin);
-                    input[strcspn(input, "\n")] = 0;
-                    
-                    send(client_socket, input, strlen(input), 0);
-                    
-                    // Recevoir le résultat
-                    memset(buffer, 0, BUFFER_SIZE);
-                    bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                    if (bytes_received > 0) {
-                        buffer[bytes_received] = '\0';
-                        printf("\n%s\n", buffer);
-                    }
-                }
+            // Analyser le type de réponse
+            if (strncmp(buffer, "PROMPT:", 7) == 0) {
+                // C'est une demande d'entrée utilisateur
+                char *prompt_text = buffer + 7;
+                printf("\n%s ", prompt_text);
                 
-            } else if (strcmp(buffer, "RESULT") == 0) {
-                // Recevoir le résultat direct
+                char user_input[BUFFER_SIZE];
+                fgets(user_input, sizeof(user_input), stdin);
+                user_input[strcspn(user_input, "\n")] = 0;
+                
+                // Envoyer l'entrée utilisateur
+                send(client_socket, user_input, strlen(user_input), 0);
+                
+                // Recevoir le résultat final
                 memset(buffer, 0, BUFFER_SIZE);
                 bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
                 if (bytes_received > 0) {
@@ -169,17 +143,24 @@ int main() {
                     printf("\n%s\n", buffer);
                 }
                 
-            } else if (strcmp(buffer, "ERROR") == 0) {
-                // Recevoir l'erreur
-                memset(buffer, 0, BUFFER_SIZE);
-                bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-                if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0';
-                    printf("\n%s\n", buffer);
-                }
+            } else if (strncmp(buffer, "QUIT:", 5) == 0) {
+                // C'est un message de déconnexion
+                char *quit_msg = buffer + 5;
+                printf("\n%s\n", quit_msg);
+                break;
+                
+            } else if (strncmp(buffer, "ERROR:", 6) == 0) {
+                // C'est une erreur
+                char *error_msg = buffer + 6;
+                printf("\n %s\n", error_msg);
+                
+            } else {
+                // C'est un résultat direct
+                printf("\n%s\n", buffer);
             }
             
-            printf("\n[Appuyez sur Entrée pour continuer]\n");
+            // Pause pour la lisibilité
+            printf("\n[Appuyez sur Entrée pour continuer...]");
             getchar();
         }
     }

@@ -3,11 +3,22 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
 #include <time.h>
 #include "common.h"
 
+void sigchld_handler(int sig) {
+    (void)sig;
+    while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
 void handle_request(int client_socket) {
     char buffer[BUFFER_SIZE];
+    
+    // Recevoir la requête (on ignore le contenu, on renvoie juste la date)
+    recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
@@ -30,7 +41,14 @@ int main() {
     
     printf("[SERVICE DATE] Démarrage sur port %d\n", PORT_DATE);
     
+    signal(SIGCHLD, sigchld_handler);
+    
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket < 0) {
+        perror("[SERVICE DATE] Erreur socket");
+        exit(1);
+    }
+    
     int opt = 1;
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     
@@ -39,14 +57,25 @@ int main() {
     server_addr.sin_port = htons(PORT_DATE);
     server_addr.sin_addr.s_addr = INADDR_ANY;
     
-    bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr));
-    listen(server_socket, 5);
+    if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        perror("[SERVICE DATE] Erreur bind");
+        close(server_socket);
+        exit(1);
+    }
     
-    printf("[SERVICE DATE]  Prêt\n");
+    if (listen(server_socket, 5) < 0) {
+        perror("[SERVICE DATE] Erreur listen");
+        close(server_socket);
+        exit(1);
+    }
+    
+    printf("[SERVICE DATE] Prêt\n");
     
     while (1) {
         client_len = sizeof(client_addr);
         client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_len);
+        
+        if (client_socket < 0) continue;
         
         if (fork() == 0) {
             close(server_socket);
