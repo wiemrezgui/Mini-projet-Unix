@@ -7,7 +7,7 @@ COMMON_OBJ = common.o
 ADDR ?= 127.0.0.1
 PORT ?= 8080
 # Tous les exécutables
-ALL = serverTCP server_date server_files server_content serveur_stats clientTCP
+ALL = serverTCP server_date server_files server_content server_stats clientTCP
 
 .PHONY: all clean run stop
 
@@ -34,8 +34,8 @@ server_content: server_content.c $(COMMON_OBJ)
 	$(CC) $(CFLAGS) server_content.c $(COMMON_OBJ) -o server_content $(LDFLAGS)
 
 # Serveur spécialisé: Stats
-serveur_stats: serveur_stats.c $(COMMON_OBJ)
-	$(CC) $(CFLAGS) serveur_stats.c $(COMMON_OBJ) -o serveur_stats $(LDFLAGS)
+server_stats: server_stats.c $(COMMON_OBJ)
+	$(CC) $(CFLAGS) server_stats.c $(COMMON_OBJ) -o server_stats $(LDFLAGS)
 
 # clientTCP
 clientTCP: clientTCP.c $(COMMON_OBJ)
@@ -47,7 +47,7 @@ run: all
 	./server_date &
 	./server_files &
 	./server_content &
-	./serveur_stats &
+	./server_stats &
 	@sleep 1
 	@echo "=== Démarrage du serverTCP ==="
 	./serverTCP $(ADDR) $(PORT)
@@ -58,7 +58,7 @@ stop:
 	@pkill -f serveur_date || true
 	@pkill -f serveur_fichiers || true
 	@pkill -f serveur_contenu || true
-	@pkill -f serveur_stats || true
+	@pkill -f server_stats || true
 	@pkill -f proxy || true
 	@rm -f server_info.txt
 	@echo "✓ Tous les serveurs arrêtés"
