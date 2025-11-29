@@ -52,7 +52,7 @@ clientTCP: clientTCP.c $(COMMON_OBJ)
 clean:
 	@echo " Suppression des fichiers exécutables et temporaires..."
 	rm -f $(ALL) *.o users.txt server_info.txt
-	@echo "%s Nettoyage complet effectué"
+	@echo  Nettoyage complet effectué"
 
 # Lancer tous les serveurs en arrière-plan
 run: all 
@@ -70,7 +70,7 @@ run: all
 	@./server_date &
 	@sleep 1
 	
-	@echo "%s Lancement serveur Fichiers sur port $(PORT_FILES)..."
+	@echo " Lancement serveur Fichiers sur port $(PORT_FILES)..."
 	@./server_files  &
 	@sleep 1
 	
@@ -82,14 +82,14 @@ run: all
 	@./server_stats  &
 	@sleep 2
 	
-	@echo "%s Tous les serveurs spécialisés démarrés en arrière-plan"
+	@echo " Tous les serveurs spécialisés démarrés en arrière-plan"
 	
 	# Vérification que les serveurs sont bien lancés
 	@echo ""
 	@echo " Vérification des serveurs..."
 	@for p in $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
 		if netstat -ano 2>/dev/null | grep ":$$p " > /dev/null; then \
-			echo "%s Serveur sur port $$p: EN ÉCOUTE"; \
+			echo " Serveur sur port $$p: EN ÉCOUTE"; \
 		else \
 			echo " Serveur sur port $$p: NON DÉMARRÉ"; \
 		fi; \
