@@ -46,18 +46,13 @@ void handle_request(int client_socket) {
     // Ouvrir le fichier
     FILE *file = fopen(filepath, "r");
     if (file == NULL) {
-        snprintf(buffer, BUFFER_SIZE, 
-                "Erreur: Fichier '%s' non trouvé ou inaccessible\n"
-                "Chemin absolu: %s\n"
-                "Erreur système: %s", 
-                filepath,
-                realpath(filepath, NULL) ? realpath(filepath, NULL) : "impossible à résoudre");
+        snprintf(buffer, BUFFER_SIZE, "Erreur: fichier non trouvé ou inaccessible\n");
         send(client_socket, buffer, strlen(buffer), 0);
         close(client_socket);
         return;
     }
     
-    snprintf(buffer, BUFFER_SIZE, "=== CONTENU DU FICHIER '%s' ===\n", filepath);
+    snprintf(buffer, BUFFER_SIZE, "=== CONTENU DU FICHIER ===\n");
     int offset = strlen(buffer);
     
     char line[256];

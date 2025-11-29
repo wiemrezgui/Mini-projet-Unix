@@ -48,38 +48,14 @@ server_stats: server_stats.c $(COMMON_OBJ)
 clientTCP: clientTCP.c $(COMMON_OBJ)
 	$(CC) $(CFLAGS) clientTCP.c $(COMMON_OBJ) -o clientTCP $(LDFLAGS)
 
-# Nettoyer les ports - Tue les processus utilisant les ports
-clean-ports:
-	@echo " Nettoyage des ports des serveurs..."
-	@echo "Arrêt des processus sur les ports $(PORT), $(PORT_DATE), $(PORT_FILES), $(PORT_CONTENT), $(PORT_STATS)..."
-
-	@-if [ "$$(uname -o 2>/dev/null)" = "Cygwin" ]; then \
-		for p in $(PORT) $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
-			PIDS=$$(netstat -ano 2>/dev/null | grep ":$$p " | awk '{print $$5}' | sort -u); \
-			if [ -n "$$PIDS" ]; then \
-				for pid in $$PIDS; do \
-					taskkill /F /PID $$pid > /dev/null 2>&1 && echo "%s PID $$pid arrêté" || echo " Échec PID $$pid"; \
-				done; \
-			else \
-				echo "%s Port $$p libre"; \
-			fi; \
-		done; \
-	fi
-	
-	@sleep 2
-	@echo " Nettoyage des ports terminé"
-# Arrêter tous les serveurs (alias de clean-ports)
-stop: clean-ports
-	@echo "🛑 Tous les serveurs ont été arrêtés"
-
 # Nettoyage complet - Arrête les serveurs ET supprime les fichiers
-clean: clean-ports
+clean:
 	@echo " Suppression des fichiers exécutables et temporaires..."
 	rm -f $(ALL) *.o users.txt server_info.txt
 	@echo "%s Nettoyage complet effectué"
 
 # Lancer tous les serveurs en arrière-plan
-run: all clean-ports
+run: all 
 	@echo " Démarrage de l'écosystème multiserveur..."
 	@echo " Configuration:"
 	@echo "   - Proxy principal: $(ADDR):$(PORT)"
@@ -107,7 +83,6 @@ run: all clean-ports
 	@sleep 2
 	
 	@echo "%s Tous les serveurs spécialisés démarrés en arrière-plan"
-	@echo " Logs disponibles dans: server_*.log"
 	
 	# Vérification que les serveurs sont bien lancés
 	@echo ""
@@ -127,7 +102,7 @@ run: all clean-ports
 
 # Lancer seulement le client
 client: clientTCP
-	@echo "👤 Lancement du client..."
+	@echo " Lancement du client..."
 	./clientTCP
 
 # Aide
@@ -138,10 +113,7 @@ help:
 	@echo "  make run           - Lancer tous les serveurs (défaut: 127.0.0.1:8080)"
 	@echo "  make run ADDR=<ip> PORT=<port> - Lancer avec IP/port personnalisés"
 	@echo "  make client        - Lancer seulement le client"
-	@echo "  make stop          - Arrêter tous les serveurs"
 	@echo "  make clean         - Nettoyer COMPLET (arrête serveurs + supprime fichiers)"
-	@echo "  make clean-ports   - Arrêter les serveurs sans supprimer les fichiers"
-	@echo "  make status        - Vérifier l'état des serveurs"
 	@echo ""
 	@echo "Ports utilisés:"
 	@echo "  - Proxy: $(PORT) (configurable)"

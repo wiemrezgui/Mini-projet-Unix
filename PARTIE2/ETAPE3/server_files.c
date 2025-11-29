@@ -54,18 +54,13 @@ void handle_request(int client_socket) {
     // Ouvrir le répertoire
     dir = opendir(dir_path);
     if (dir == NULL) {
-        snprintf(buffer, BUFFER_SIZE, 
-                "Erreur: Répertoire '%s' non trouvé\n"
-                "Chemin absolu: %s\n"
-                "Erreur système: %s", 
-                dir_path, 
-                realpath(dir_path, NULL) ? realpath(dir_path, NULL) : "impossible à résoudre");
+        snprintf(buffer, BUFFER_SIZE, "Erreur: Répertoire non trouvé ou inaccessible\n");
         send(client_socket, buffer, strlen(buffer), 0);
         close(client_socket);
         return;
     }
     
-    snprintf(buffer, BUFFER_SIZE, "=== FICHIERS DU RÉPERTOIRE '%s' ===\n", dir_path);
+    snprintf(buffer, BUFFER_SIZE, "=== FICHIERS DU RÉPERTOIRE ===\n");
     int offset = strlen(buffer);
     
     int file_count = 0;
