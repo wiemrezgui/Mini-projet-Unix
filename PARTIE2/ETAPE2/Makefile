@@ -22,9 +22,15 @@ serverTCP: serverTCP.c common.c common.h
 clientTCP: clientTCP.c common.c common.h
 	$(CC) $(CFLAGS) -o clientTCP clientTCP.c common.c
 
+# Arrêter le serveur 
+stop-server:
+	@echo " Arrêt du serveur UDP..."
+	@echo " Arrêt par nom d'exécutable..."
+	@-pkill -f "$(serverTCP)" 2>/dev/null || true
+	@echo " Serveur arrêté."
 # Nettoyage du projet
 # Supprime les exécutables, fichiers temporaires et dossiers de logs
-clean:
+clean: stop-server
 	# Suppression des exécutables
 	rm -f serverTCP clientTCP
 	

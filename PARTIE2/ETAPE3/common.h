@@ -9,7 +9,7 @@
 #define MAX_PASSWORD_LEN 50
 
 // Ports des serveurs spécialisés
-#define PORT_PRINCIPAL 8080  // Proxy
+#define PORT_PRINCIPAL 8080 
 #define PORT_DATE 8081
 #define PORT_FICHIERS 8082
 #define PORT_CONTENU 8083

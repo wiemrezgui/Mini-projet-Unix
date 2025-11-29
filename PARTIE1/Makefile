@@ -1,6 +1,6 @@
 # Makefile pour compiler le client et le serveur UDP
 # Utilisation: make        (compile tout)
-#              make clean   (nettoie les fichiers compilés)
+#              make clean   (nettoie les fichiers compilés + tue le serveur)
 #              make client  (compile seulement le client)
 #              make server  (compile seulement le serveur)
 #              make run-server ADDR=127.0.0.1 PORT=8080  (lance le serveur)
@@ -13,6 +13,9 @@ CFLAGS = -Wall -Wextra -g
 # Noms des exécutables
 CLIENT = clientUDP
 SERVER = serverUDP
+
+# Port par défaut pour la détection des processus
+DEFAULT_PORT = 8080
 
 # Règle par défaut: compile tout
 all: $(CLIENT) $(SERVER)
@@ -41,8 +44,20 @@ client: $(CLIENT)
 
 server: $(SERVER)
 
+# Arrêter le serveur 
+stop-server:
+	@echo " Arrêt du serveur UDP..."
+	@echo " Méthode 1: Arrêt par nom d'exécutable..."
+	@-pkill -f "$(SERVER)" 2>/dev/null || true
+	@echo " Méthode 2: Arrêt par port $(DEFAULT_PORT)..."
+	@-netstat -ano | grep ":$(DEFAULT_PORT) " | awk '{print $$5}' | while read pid; do \
+		echo "  Arrêt du processus PID: $$pid"; \
+		taskkill /F /PID $$pid 2>/dev/null || true; \
+	done
+	@echo " Serveur arrêté."
+
 # Exécution du serveur avec paramètres
-run-server: $(SERVER)
+run-server: $(SERVER) stop-server
 	@if [ -z "$(ADDR)" ] || [ -z "$(PORT)" ]; then \
 		echo " Usage: make run-server ADDR=127.0.0.1 PORT=8080"; \
 		echo "   Exemple: make run-server ADDR=127.0.0.1 PORT=5000"; \
@@ -56,10 +71,25 @@ run-client: $(CLIENT)
 	@echo " Lancement du client..."
 	./$(CLIENT)
 
-# Nettoyage des fichiers compilés
-clean:
+# Nettoyage des fichiers compilés + arrêt du serveur
+clean: stop-server
+	@echo " Nettoyage des fichiers compilés..."
 	rm -f $(CLIENT) $(SERVER) server_info.txt
-	@echo " Fichiers nettoyés"
+	@echo "  Fichiers nettoyés"
+
+# Nettoyage forcé
+clean-force:
+	@echo "  Nettoyage forcé..."
+	@echo " Arrêt de tous les processus gcc et serveurs..."
+	@-taskkill /F /IM "gcc.exe" 2>/dev/null || true
+	@-taskkill /F /IM "$(SERVER).exe" 2>/dev/null || true
+	@-taskkill /F /IM "$(CLIENT).exe" 2>/dev/null || true
+	@-pkill -f "gcc" 2>/dev/null || true
+	@-pkill -f "$(SERVER)" 2>/dev/null || true
+	@-pkill -f "$(CLIENT)" 2>/dev/null || true
+	@echo " Suppression des fichiers..."
+	rm -f $(CLIENT) $(SERVER) server_info.txt *.o
+	@echo "  Nettoyage forcé terminé"
 
 # Test complet
 test: all
@@ -75,12 +105,16 @@ help:
 	@echo "  make server       - Compile seulement le serveur"
 	@echo "  make run-server ADDR=... PORT=... - Lance le serveur"
 	@echo "  make run-client   - Lance le client"
+	@echo "  make stop-server  - Arrête le serveur sans nettoyer"
+	@echo "  make clean        - Nettoie les fichiers + arrête le serveur"
+	@echo "  make clean-force  - Nettoyage agressif (si clean ne suffit pas)"
+	@echo "  make status       - Vérifie l'état du serveur"
 	@echo "  make test         - Aide pour tester"
-	@echo "  make clean        - Nettoie les fichiers compilés"
 	@echo ""
 	@echo " Exemples:"
 	@echo "  make run-server ADDR=127.0.0.1 PORT=5000"
 	@echo "  make run-server ADDR=0.0.0.0 PORT=8080"
+	@echo "  make clean       # Arrête le serveur et nettoie"
 
 # Indique que ces règles ne correspondent pas à des fichiers
-.PHONY: all clean client server run-server run-client test help
+.PHONY: all clean clean-force client server run-server run-client stop-server status test help

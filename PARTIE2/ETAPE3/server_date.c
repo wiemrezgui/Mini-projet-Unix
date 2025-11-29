@@ -17,7 +17,7 @@ void sigchld_handler(int sig) {
 void handle_request(int client_socket) {
     char buffer[BUFFER_SIZE];
     
-    // Recevoir la requête (on ignore le contenu, on renvoie juste la date)
+    // Recevoir la requête
     recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
     
     time_t now = time(NULL);

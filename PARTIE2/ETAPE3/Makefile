@@ -50,33 +50,10 @@ clientTCP: clientTCP.c $(COMMON_OBJ)
 
 # Nettoyer les ports - Tue les processus utilisant les ports
 clean-ports:
-	@echo "🧹 Nettoyage des ports des serveurs..."
-	@echo "🔫 Arrêt des processus sur les ports $(PORT), $(PORT_DATE), $(PORT_FILES), $(PORT_CONTENT), $(PORT_STATS)..."
-	
-	# Méthode 1: Utiliser fuser (Linux)
-	@-for p in $(PORT) $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
-		if command -v fuser >/dev/null 2>&1; then \
-			fuser -k $${p}/tcp 2>/dev/null || true; \
-		fi; \
-	done
-	
-	# Méthode 2: Utiliser pkill avec les noms des exécutables
-	@-pkill -f "serverTCP" || true
-	@-pkill -f "server_date" || true
-	@-pkill -f "server_files" || true
-	@-pkill -f "server_content" || true
-	@-pkill -f "server_stats" || true
-	
-	# Méthode 3: Utiliser killall (Linux)
-	@-if command -v killall >/dev/null 2>&1; then \
-		killall serverTCP 2>/dev/null || true; \
-		killall server_date 2>/dev/null || true; \
-		killall server_files 2>/dev/null || true; \
-		killall server_content 2>/dev/null || true; \
-		killall server_stats 2>/dev/null || true; \
-	fi
-	
-	# Méthode 4: Cygwin/Windows - utiliser taskkill
+	@echo " Nettoyage des ports des serveurs..."
+	@echo "Arrêt des processus sur les ports $(PORT), $(PORT_DATE), $(PORT_FILES), $(PORT_CONTENT), $(PORT_STATS)..."
+
+	# Cygwin/Windows - utiliser taskkill
 	@-if [ "$$(uname -o 2>/dev/null)" = "Cygwin" ]; then \
 		for p in $(PORT) $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
 			netstat -ano | grep ":$$p " | awk '{print $$5}' | while read pid; do \
@@ -96,7 +73,6 @@ stop: clean-ports
 clean: clean-ports
 	@echo " Suppression des fichiers exécutables et temporaires..."
 	rm -f $(ALL) *.o users.txt server_info.txt
-	rm -rf logs_test_*
 	@echo "Nettoyage complet effectué"
 
 # Lancer tous les serveurs en arrière-plan
@@ -112,23 +88,18 @@ run: all clean-ports
 	
 	@echo "=== Démarrage des serveurs spécialisés ==="
 	@echo "Lancement serveur Date..."
-	@./server_date > server_date.log 2>&1 &
 	@sleep 1
 	
 	@echo " Lancement serveur Fichiers..."
-	@./server_files > server_files.log 2>&1 &
 	@sleep 1
 	
 	@echo " Lancement serveur Contenu..."
-	@./server_content > server_content.log 2>&1 &
 	@sleep 1
 	
 	@echo "  Lancement serveur Stats..."
-	@./server_stats > server_stats.log 2>&1 &
 	@sleep 2
 	
 	@echo " Tous les serveurs spécialisés démarrés en arrière-plan"
-	@echo " Logs disponibles dans: server_*.log"
 	@echo ""
 	
 	@echo "=== Démarrage du serveur principal (Proxy) ==="
@@ -164,7 +135,6 @@ help:
 	@echo "  make stop          - Arrêter tous les serveurs"
 	@echo "  make clean         - Nettoyer COMPLET (arrête serveurs + supprime fichiers)"
 	@echo "  make clean-ports   - Arrêter les serveurs sans supprimer les fichiers"
-	@echo "  make status        - Vérifier l'état des serveurs"
 	@echo ""
 	@echo "Ports utilisés:"
 	@echo "  - Proxy: $(PORT) (configurable)"

@@ -47,14 +47,14 @@ void send_menu(int client_socket) {
     char menu[BUFFER_SIZE];
     snprintf(menu, BUFFER_SIZE,
              "\n╔════════════════════════════════════════╗\n"
-             "║    MENU DES SERVICES DISPONIBLES      ║\n"
-             "╠════════════════════════════════════════╣\n"
-             "║ 1. Date et heure du serveur           ║\n"
-             "║ 2. Liste des fichiers d'un répertoire ║\n"
-             "║ 3. Contenu d'un fichier                ║\n"
-             "║ 4. Durée de connexion                  ║\n"
-             "║ 5. QUIT - Se déconnecter               ║\n"
-             "╚════════════════════════════════════════╝\n"
+             "║    MENU DES SERVICES DISPONIBLES         ║\n"
+             "╠══════════════════════════════════════════╣\n"
+             "║ 1. Date et heure du serveur              ║\n"
+             "║ 2. Liste des fichiers d'un répertoire    ║\n"
+             "║ 3. Contenu d'un fichier                  ║\n"
+             "║ 4. Durée de connexion                    ║\n"
+             "║ 5. QUIT - Se déconnecter                 ║\n"
+             "╚══════════════════════════════════════════╝\n"
              "Votre choix: ");
     send(client_socket, menu, strlen(menu), 0);
 }
@@ -109,6 +109,7 @@ int relay_to_server(int port, const char* request, char* response) {
 }
 
 void sigchld_handler(int sig) {
+    (void)sig; // Éviter l'avertissement de variable non utilisée
     while (waitpid(-1, NULL, WNOHANG) > 0);
 }
 
@@ -197,7 +198,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                 buffer[bytes] = '\0';
                 
                 // Préparer la requête pour le serveur fichiers
-                snprintf(service_request, BUFFER_SIZE, "LIST %s", buffer);
+                snprintf(service_request, BUFFER_SIZE, "LIST '%s'", buffer);
                 
                 if (relay_to_server(target_port, service_request, response) == 0) {
                     send(client_socket, response, strlen(response), 0);
@@ -220,7 +221,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                 buffer[bytes] = '\0';
                 
                 // Préparer la requête pour le serveur contenu
-                snprintf(service_request, BUFFER_SIZE, "GET %s", buffer);
+                snprintf(service_request, BUFFER_SIZE, "GET '%s'", buffer);
                 
                 if (relay_to_server(target_port, service_request, response) == 0) {
                     send(client_socket, response, strlen(response), 0);
