@@ -71,7 +71,7 @@ void kill_all_servers() {
     while (fscanf(file, "%d", &pid) == 1) {
         if (pid != getpid()) {
             kill(pid, SIGTERM);
-            printf("✓ Signal envoyé au PID %d\n", pid);
+            printf(" Signal envoyé au PID %d\n", pid);
         }
     }
     
@@ -89,6 +89,7 @@ void kill_all_servers() {
 
 // Gestionnaire de signal
 void signal_handler(int sig) {
+    (void)sig;
     printf("\n[PID %d] Réception du signal\n", getpid());
     
     if (getpid() == getppid() + 1) { // Le serveur principal

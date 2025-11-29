@@ -42,7 +42,7 @@ void handle_request(int client_socket) {
     snprintf(buffer, BUFFER_SIZE,
              "=== DURÉE DE CONNEXION ===\n"
              "Temps écoulé: %02d:%02d:%02d\n"
-             "(soit %.0f secondes)\n",
+             "( %.0f secondes)\n",
              hours, minutes, seconds, elapsed);
     
     send(client_socket, buffer, strlen(buffer), 0);

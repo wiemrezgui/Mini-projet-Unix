@@ -263,7 +263,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                     send(client_socket, response, strlen(response), 0);
                     printf("[SERVER]  Contenu fichier envoyé à %s\n", username);
                 } else {
-                    strcpy(response, "⚠️ Service CONTENU indisponible");
+                    strcpy(response, " Service CONTENU indisponible");
                     send(client_socket, response, strlen(response), 0);
                     printf("[SERVER]  Service CONTENU indisponible\n");
                 }
