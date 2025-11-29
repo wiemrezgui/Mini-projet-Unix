@@ -40,7 +40,9 @@ int main() {
     socklen_t client_len;
     
     printf("[SERVICE DATE] Démarrage sur port %d\n", PORT_DATE);
-    
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+    register_my_pid();
     signal(SIGCHLD, sigchld_handler);
     
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -84,6 +86,6 @@ int main() {
         }
         close(client_socket);
     }
-    
+    unregister_my_pid();
     return 0;
 }

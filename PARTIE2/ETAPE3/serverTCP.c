@@ -334,7 +334,9 @@ int main(int argc, char *argv[])
     printf("╚══════════════════════════════════════════════════╝\n\n");
 
     add_users();
-
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+    register_my_pid();
     printf("=== DÉMARRAGE DU SERVER ===\n");
     printf("Adresse: %s, Port: %d\n", address, port);
     printf("Services:\n");
@@ -417,5 +419,6 @@ int main(int argc, char *argv[])
 
     close(proxy_socket);
     remove(SERVER_INFO_FILE);
+    unregister_my_pid();
     return 0;
 }

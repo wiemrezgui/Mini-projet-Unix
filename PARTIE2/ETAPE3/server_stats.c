@@ -57,7 +57,9 @@ int main() {
     printf("[SERVICE STATS] Démarrage sur port %d\n", PORT_STATS);
     
     signal(SIGCHLD, sigchld_handler);
-    
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+    register_my_pid();
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         perror("[SERVICE STATS] Erreur socket");
@@ -99,6 +101,6 @@ int main() {
         }
         close(client_socket);
     }
-    
+    unregister_my_pid();
     return 0;
 }
