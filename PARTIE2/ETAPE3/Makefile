@@ -52,7 +52,7 @@ clientTCP: clientTCP.c $(COMMON_OBJ)
 clean:
 	@echo " Suppression des fichiers exécutables et temporaires..."
 	rm -f $(ALL) *.o users.txt server_info.txt
-	@echo  Nettoyage complet effectué"
+	@echo " Nettoyage complet effectué"
 
 # Lancer tous les serveurs en arrière-plan
 run: all 

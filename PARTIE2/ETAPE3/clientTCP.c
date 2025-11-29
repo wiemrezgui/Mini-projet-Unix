@@ -14,6 +14,8 @@ int main() {
     char username[MAX_USERNAME_LEN];
     char password[MAX_PASSWORD_LEN];
     int authenticated = 0;
+    int attempts = 0;
+    const int MAX_ATTEMPTS = 3;
 
     printf("╔══════════════════════════════════════════════════╗\n");
     printf("║       CLIENT TCP                                 ║\n");
@@ -60,39 +62,59 @@ int main() {
 
     printf("[CLIENT]  Connecté au proxy\n\n");
 
-    // AUTHENTIFICATION
+    // AUTHENTIFICATION AVEC 3 TENTATIVES
     printf("═══ AUTHENTIFICATION ═══\n");
-    printf("Username: ");
-    scanf("%s", username);
-    printf("Password: ");
-    scanf("%s", password);
-    getchar(); // Vider le buffer
     
-    snprintf(buffer, BUFFER_SIZE, "AUTH:%s:%s", username, password);
-    send(client_socket, buffer, strlen(buffer), 0);
-    
-    memset(buffer, 0, BUFFER_SIZE);
-    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-    
-    if (bytes_received > 0) {
-        buffer[bytes_received] = '\0';
+    while (!authenticated && attempts < MAX_ATTEMPTS) {
+        attempts++;
         
-        if (strcmp(buffer, "AUTH_SUCCESS") == 0) {
-            authenticated = 1;
-            printf("\n[CLIENT]  Authentification réussie!\n");
+        printf("\n─── Tentative %d/%d ───\n", attempts, MAX_ATTEMPTS);
+        printf("Username: ");
+        scanf("%s", username);
+        printf("Password: ");
+        scanf("%s", password);
+        getchar(); // Vider le buffer
+        
+        // Envoyer les identifiants
+        snprintf(buffer, BUFFER_SIZE, "AUTH:%s:%s", username, password);
+        send(client_socket, buffer, strlen(buffer), 0);
+        
+        // Recevoir la réponse
+        memset(buffer, 0, BUFFER_SIZE);
+        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        
+        if (bytes_received > 0) {
+            buffer[bytes_received] = '\0';
+            
+            if (strcmp(buffer, "AUTH_SUCCESS") == 0) {
+                authenticated = 1;
+                printf("\n Authentification réussie!\n");
+            } else {
+                printf("\n Authentification échouée\n");
+                
+                // Afficher un message différent selon le nombre de tentatives restantes
+                if (attempts < MAX_ATTEMPTS) {
+                    printf(" Il vous reste %d tentative(s)\n", MAX_ATTEMPTS - attempts);
+                } else {
+                    printf(" Nombre maximum de tentatives atteint\n");
+                    printf(" Connexion refusée\n");
+                }
+            }
         } else {
-            printf("\n[CLIENT]  Authentification échouée\n");
-            close(client_socket);
-            return 1;
+            printf("\n Erreur de communication avec le serveur\n");
+            break;
         }
     }
 
-    // BOUCLE DE SERVICES 
+    // Si l'authentification a réussi, continuer avec les services
     if (authenticated) {
+        printf("\n Bienvenue %s!\n\n", username);
+        
+        // BOUCLE DE SERVICES 
         while (1) {
             // Recevoir le menu
             memset(buffer, 0, BUFFER_SIZE);
-            bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+            int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
             
             if (bytes_received <= 0) {
                 printf("[CLIENT] Proxy déconnecté\n");
@@ -163,6 +185,8 @@ int main() {
             printf("\n[Appuyez sur Entrée pour continuer...]");
             getchar();
         }
+    } else {
+        printf("\n Impossible de s'authentifier après %d tentatives\n", MAX_ATTEMPTS);
     }
     
     printf("\n[CLIENT] Déconnexion...\n");
