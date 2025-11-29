@@ -53,7 +53,6 @@ clean-ports:
 	@echo " Nettoyage des ports des serveurs..."
 	@echo "Arrêt des processus sur les ports $(PORT), $(PORT_DATE), $(PORT_FILES), $(PORT_CONTENT), $(PORT_STATS)..."
 
-	# Cygwin/Windows - utiliser taskkill
 	@-if [ "$$(uname -o 2>/dev/null)" = "Cygwin" ]; then \
 		for p in $(PORT) $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
 			PIDS=$$(netstat -ano 2>/dev/null | grep ":$$p " | awk '{print $$5}' | sort -u); \
@@ -68,19 +67,18 @@ clean-ports:
 	fi
 	
 	@sleep 2
-	@echo "%s Ports nettoyés et processus arrêtés"
-
+	@echo " Nettoyage des ports terminé"
 # Arrêter tous les serveurs (alias de clean-ports)
 stop: clean-ports
 	@echo "🛑 Tous les serveurs ont été arrêtés"
 
 # Nettoyage complet - Arrête les serveurs ET supprime les fichiers
 clean: clean-ports
-	@echo "🗑️ Suppression des fichiers exécutables et temporaires..."
+	@echo " Suppression des fichiers exécutables et temporaires..."
 	rm -f $(ALL) *.o users.txt server_info.txt
 	@echo "%s Nettoyage complet effectué"
 
-# Lancer tous les serveurs en arrière-plan - CORRIGÉ
+# Lancer tous les serveurs en arrière-plan
 run: all clean-ports
 	@echo " Démarrage de l'écosystème multiserveur..."
 	@echo " Configuration:"

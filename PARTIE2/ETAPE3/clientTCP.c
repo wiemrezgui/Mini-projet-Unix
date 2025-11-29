@@ -81,7 +81,7 @@ int main() {
             authenticated = 1;
             printf("\n[CLIENT]  Authentification réussie!\n");
         } else {
-            printf("\n[CLIENT] ✗ Authentification échouée\n");
+            printf("\n[CLIENT]  Authentification échouée\n");
             close(client_socket);
             return 1;
         }

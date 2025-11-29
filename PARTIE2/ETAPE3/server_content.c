@@ -26,22 +26,32 @@ void handle_request(int client_socket) {
     }
     buffer[bytes] = '\0';
     
-    // Extraire le chemin du fichier
-    // Format attendu: "GET /chemin" ou juste "/chemin"
-    if (strncmp(buffer, "GET ", 4) == 0) {
-        strcpy(filepath, buffer + 4);
-    } else {
-        strcpy(filepath, buffer);
-    }
+    // Nettoyer le chemin reçu
+    strcpy(filepath, buffer);
     
-    // Supprimer les espaces/newlines
+    // Supprimer espaces, newlines, guillemets
     filepath[strcspn(filepath, "\r\n")] = 0;
     
-    printf("[SERVICE CONTENU] Demande pour: '%s'\n", filepath);
+    // Supprimer les guillemets simples si présents
+    char *start = filepath;
+    if (*start == '\'') start++;
+    char *end = start + strlen(start) - 1;
+    if (*end == '\'') *end = '\0';
     
+    strcpy(filepath, start);
+    
+    printf("[SERVICE CONTENU] Demande pour: '%s'\n", filepath);
+    fflush(stdout);
+    
+    // Ouvrir le fichier
     FILE *file = fopen(filepath, "r");
     if (file == NULL) {
-        snprintf(buffer, BUFFER_SIZE, "Erreur: Fichier '%s' non trouvé ou inaccessible", filepath);
+        snprintf(buffer, BUFFER_SIZE, 
+                "Erreur: Fichier '%s' non trouvé ou inaccessible\n"
+                "Chemin absolu: %s\n"
+                "Erreur système: %s", 
+                filepath,
+                realpath(filepath, NULL) ? realpath(filepath, NULL) : "impossible à résoudre");
         send(client_socket, buffer, strlen(buffer), 0);
         close(client_socket);
         return;
@@ -51,9 +61,15 @@ void handle_request(int client_socket) {
     int offset = strlen(buffer);
     
     char line[256];
+    int line_count = 0;
     while (fgets(line, sizeof(line), file) && offset < BUFFER_SIZE - 300) {
         snprintf(buffer + offset, BUFFER_SIZE - offset, "%s", line);
         offset = strlen(buffer);
+        line_count++;
+    }
+    
+    if (line_count == 0) {
+        snprintf(buffer + offset, BUFFER_SIZE - offset, "(Fichier vide)\n");
     }
     
     fclose(file);

@@ -29,22 +29,37 @@ void handle_request(int client_socket) {
     }
     buffer[bytes] = '\0';
     
-    // Extraire le chemin du répertoire
-    // Format attendu: "LIST /chemin" ou juste "/chemin"
-    if (strncmp(buffer, "LIST ", 5) == 0) {
-        strcpy(dir_path, buffer + 5);
-    } else {
-        strcpy(dir_path, buffer);
-    }
+    // Nettoyer le chemin reçu
+    strcpy(dir_path, buffer);
     
-    // Supprimer les espaces/newlines
+    // Supprimer espaces, newlines, guillemets
     dir_path[strcspn(dir_path, "\r\n")] = 0;
     
-    printf("[SERVICE FICHIERS] Demande pour: '%s'\n", dir_path);
+    // Supprimer les guillemets simples si présents
+    char *start = dir_path;
+    if (*start == '\'') start++;
+    char *end = start + strlen(start) - 1;
+    if (*end == '\'') *end = '\0';
     
+    // Si le chemin est vide, utiliser le répertoire courant
+    if (strlen(start) == 0 || strcmp(start, ".") == 0) {
+        strcpy(dir_path, ".");
+    } else {
+        strcpy(dir_path, start);
+    }
+    
+    printf("[SERVICE FICHIERS] Demande pour: '%s'\n", dir_path);
+    fflush(stdout);
+    
+    // Ouvrir le répertoire
     dir = opendir(dir_path);
     if (dir == NULL) {
-        snprintf(buffer, BUFFER_SIZE, "Erreur: Répertoire '%s' non trouvé", dir_path);
+        snprintf(buffer, BUFFER_SIZE, 
+                "Erreur: Répertoire '%s' non trouvé\n"
+                "Chemin absolu: %s\n"
+                "Erreur système: %s", 
+                dir_path, 
+                realpath(dir_path, NULL) ? realpath(dir_path, NULL) : "impossible à résoudre");
         send(client_socket, buffer, strlen(buffer), 0);
         close(client_socket);
         return;
@@ -53,17 +68,23 @@ void handle_request(int client_socket) {
     snprintf(buffer, BUFFER_SIZE, "=== FICHIERS DU RÉPERTOIRE '%s' ===\n", dir_path);
     int offset = strlen(buffer);
     
+    int file_count = 0;
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue;
         
         snprintf(buffer + offset, BUFFER_SIZE - offset, "- %s\n", entry->d_name);
         offset = strlen(buffer);
+        file_count++;
         
         if (offset >= BUFFER_SIZE - 100) {
             strcat(buffer, "... (liste tronquée)");
             break;
         }
+    }
+    
+    if (file_count == 0) {
+        snprintf(buffer + offset, BUFFER_SIZE - offset, "(Répertoire vide)\n");
     }
     
     closedir(dir);
