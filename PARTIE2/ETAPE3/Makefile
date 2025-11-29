@@ -56,26 +56,31 @@ clean-ports:
 	# Cygwin/Windows - utiliser taskkill
 	@-if [ "$$(uname -o 2>/dev/null)" = "Cygwin" ]; then \
 		for p in $(PORT) $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
-			netstat -ano | grep ":$$p " | awk '{print $$5}' | while read pid; do \
-				taskkill /F /PID $$pid 2>/dev/null || true; \
-			done; \
+			PIDS=$$(netstat -ano 2>/dev/null | grep ":$$p " | awk '{print $$5}' | sort -u); \
+			if [ -n "$$PIDS" ]; then \
+				for pid in $$PIDS; do \
+					taskkill /F /PID $$pid > /dev/null 2>&1 && echo "%s PID $$pid arrêté" || echo " Échec PID $$pid"; \
+				done; \
+			else \
+				echo "%s Port $$p libre"; \
+			fi; \
 		done; \
 	fi
 	
 	@sleep 2
-	@echo " Ports nettoyés et processus arrêtés"
+	@echo "%s Ports nettoyés et processus arrêtés"
 
 # Arrêter tous les serveurs (alias de clean-ports)
 stop: clean-ports
-	@echo " Tous les serveurs ont été arrêtés"
+	@echo "🛑 Tous les serveurs ont été arrêtés"
 
 # Nettoyage complet - Arrête les serveurs ET supprime les fichiers
 clean: clean-ports
-	@echo " Suppression des fichiers exécutables et temporaires..."
+	@echo "🗑️ Suppression des fichiers exécutables et temporaires..."
 	rm -f $(ALL) *.o users.txt server_info.txt
-	@echo "Nettoyage complet effectué"
+	@echo "%s Nettoyage complet effectué"
 
-# Lancer tous les serveurs en arrière-plan
+# Lancer tous les serveurs en arrière-plan - CORRIGÉ
 run: all clean-ports
 	@echo " Démarrage de l'écosystème multiserveur..."
 	@echo " Configuration:"
@@ -87,19 +92,35 @@ run: all clean-ports
 	@echo ""
 	
 	@echo "=== Démarrage des serveurs spécialisés ==="
-	@echo "Lancement serveur Date..."
+	@echo " Lancement serveur Date sur port $(PORT_DATE)..."
+	@./server_date &
 	@sleep 1
 	
-	@echo " Lancement serveur Fichiers..."
+	@echo "%s Lancement serveur Fichiers sur port $(PORT_FILES)..."
+	@./server_files  &
 	@sleep 1
 	
-	@echo " Lancement serveur Contenu..."
+	@echo " Lancement serveur Contenu sur port $(PORT_CONTENT)..."
+	@./server_content  &
 	@sleep 1
 	
-	@echo "  Lancement serveur Stats..."
+	@echo " Lancement serveur Stats sur port $(PORT_STATS)..."
+	@./server_stats  &
 	@sleep 2
 	
-	@echo " Tous les serveurs spécialisés démarrés en arrière-plan"
+	@echo "%s Tous les serveurs spécialisés démarrés en arrière-plan"
+	@echo " Logs disponibles dans: server_*.log"
+	
+	# Vérification que les serveurs sont bien lancés
+	@echo ""
+	@echo " Vérification des serveurs..."
+	@for p in $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
+		if netstat -ano 2>/dev/null | grep ":$$p " > /dev/null; then \
+			echo "%s Serveur sur port $$p: EN ÉCOUTE"; \
+		else \
+			echo " Serveur sur port $$p: NON DÉMARRÉ"; \
+		fi; \
+	done
 	@echo ""
 	
 	@echo "=== Démarrage du serveur principal (Proxy) ==="
@@ -108,7 +129,7 @@ run: all clean-ports
 
 # Lancer seulement le client
 client: clientTCP
-	@echo " Lancement du client..."
+	@echo "👤 Lancement du client..."
 	./clientTCP
 
 # Aide
@@ -122,6 +143,7 @@ help:
 	@echo "  make stop          - Arrêter tous les serveurs"
 	@echo "  make clean         - Nettoyer COMPLET (arrête serveurs + supprime fichiers)"
 	@echo "  make clean-ports   - Arrêter les serveurs sans supprimer les fichiers"
+	@echo "  make status        - Vérifier l'état des serveurs"
 	@echo ""
 	@echo "Ports utilisés:"
 	@echo "  - Proxy: $(PORT) (configurable)"
@@ -135,3 +157,4 @@ help:
 	@echo "  make run PORT=7777"
 	@echo "  make clean          # Arrête tout et nettoie"
 	@echo "  make stop           # Arrête les serveurs sans nettoyer"
+	@echo "  make status         # Vérifie si les serveurs tournent"
