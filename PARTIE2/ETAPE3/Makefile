@@ -111,19 +111,6 @@ client: clientTCP
 	@echo " Lancement du client..."
 	./clientTCP
 
-# Vérifier l'état des serveurs
-status:
-	@echo " État des serveurs:"
-	@echo "Port $(PORT) (Proxy): $$(if lsof -Pi :$(PORT) -sTCP:LISTEN -t >/dev/null; then echo "✅ En écoute"; else echo "❌ Arrêté"; fi)"
-	@echo "Port $(PORT_DATE) (Date): $$(if lsof -Pi :$(PORT_DATE) -sTCP:LISTEN -t >/dev/null; then echo "✅ En écoute"; else echo "❌ Arrêté"; fi)"
-	@echo "Port $(PORT_FILES) (Fichiers): $$(if lsof -Pi :$(PORT_FILES) -sTCP:LISTEN -t >/dev/null; then echo "✅ En écoute"; else echo "❌ Arrêté"; fi)"
-	@echo "Port $(PORT_CONTENT) (Contenu): $$(if lsof -Pi :$(PORT_CONTENT) -sTCP:LISTEN -t >/dev/null; then echo "✅ En écoute"; else echo "❌ Arrêté"; fi)"
-	@echo "Port $(PORT_STATS) (Stats): $$(if lsof -Pi :$(PORT_STATS) -sTCP:LISTEN -t >/dev/null; then echo "✅ En écoute"; else echo "❌ Arrêté"; fi)"
-	
-	@echo ""
-	@echo " Processus en cours:"
-	@pgrep -fl "server_" || echo "Aucun processus serveur trouvé"
-
 # Aide
 help:
 	@echo "Usage du Makefile - Système Multiserveur:"
