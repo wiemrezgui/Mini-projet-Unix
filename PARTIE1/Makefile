@@ -47,9 +47,7 @@ server: $(SERVER)
 # Arrêter le serveur 
 stop-server:
 	@echo " Arrêt du serveur UDP..."
-	@echo " Méthode 1: Arrêt par nom d'exécutable..."
 	@-pkill -f "$(SERVER)" 2>/dev/null || true
-	@echo " Méthode 2: Arrêt par port $(DEFAULT_PORT)..."
 	@-netstat -ano | grep ":$(DEFAULT_PORT) " | awk '{print $$5}' | while read pid; do \
 		echo "  Arrêt du processus PID: $$pid"; \
 		taskkill /F /PID $$pid 2>/dev/null || true; \

@@ -48,9 +48,9 @@ stop:
 		echo "Arrêt de tous les serveurs enregistrés..."; \
 		while read pid; do \
 			if kill $$pid 2>/dev/null; then \
-				echo "✓ Signal envoyé au PID $$pid"; \
+				echo " Signal envoyé au PID $$pid"; \
 			else \
-				echo "✗ Impossible d'arrêter le PID $$pid"; \
+				echo " Impossible d'arrêter le PID $$pid"; \
 			fi; \
 		done < servers-pids; \
 		rm -f servers-pids; \

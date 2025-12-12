@@ -198,7 +198,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                 send(client_socket, response, strlen(response), 0);
                 printf("[SERVER]  Date envoyée à %s\n", username);
             } else {
-                strcpy(response, "⚠️ Service DATE indisponible");
+                strcpy(response, " Service DATE indisponible");
                 send(client_socket, response, strlen(response), 0);
                 printf("[SERVER]  Service DATE indisponible\n");
             }
@@ -222,14 +222,14 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                 
                 printf("[SERVER] Répertoire demandé: '%s'\n", buffer);
                 
-                // Envoyer directement le chemin au serveur spécialisé (SANS guillemets)
+                // Envoyer directement le chemin au serveur spécialisé
                 snprintf(service_request, BUFFER_SIZE, "%s", buffer);
                 
                 if (relay_to_server(target_port, service_request, response) == 0) {
                     send(client_socket, response, strlen(response), 0);
                     printf("[SERVER]  Liste fichiers envoyée à %s\n", username);
                 } else {
-                    strcpy(response, "⚠️ Service FICHIERS indisponible");
+                    strcpy(response, " Service FICHIERS indisponible");
                     send(client_socket, response, strlen(response), 0);
                     printf("[SERVER]  Service FICHIERS indisponible\n");
                 }
@@ -256,7 +256,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                 
                 printf("[SERVER] Fichier demandé: '%s'\n", buffer);
                 
-                // Envoyer directement le chemin au serveur spécialisé (SANS guillemets)
+                // Envoyer directement le chemin au serveur spécialisé 
                 snprintf(service_request, BUFFER_SIZE, "%s", buffer);
                 
                 if (relay_to_server(target_port, service_request, response) == 0) {
@@ -287,7 +287,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
                 send(client_socket, response, strlen(response), 0);
                 printf("[SERVER]  Stats envoyées à %s\n", username);
             } else {
-                strcpy(response, "⚠️ Service STATS indisponible");
+                strcpy(response, "s Service STATS indisponible");
                 send(client_socket, response, strlen(response), 0);
                 printf("[SERVER]  Service STATS indisponible\n");
             }
@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
     port = atoi(argv[2]);
 
     printf("╔══════════════════════════════════════════════════╗\n");
-    printf("║     SERVER  - MULTISERVEUR                ║\n");
+    printf("║     SERVER  - MULTISERVEUR                       ║\n");
     printf("╚══════════════════════════════════════════════════╝\n\n");
 
     add_users();
