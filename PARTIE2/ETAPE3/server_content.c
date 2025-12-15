@@ -57,7 +57,7 @@ void handle_request(int client_socket) {
     
     char line[256];
     int line_count = 0;
-    while (fgets(line, sizeof(line), file) && offset < BUFFER_SIZE - 300) {
+    while (fgets(line, sizeof(line), file) && offset < BUFFER_SIZE -1) {
         snprintf(buffer + offset, BUFFER_SIZE - offset, "%s", line);
         offset = strlen(buffer);
         line_count++;
@@ -104,7 +104,7 @@ int main() {
         exit(1);
     }
     
-    if (listen(server_socket, 5) < 0) {
+    if (listen(server_socket, 6) < 0) {
         perror("[SERVICE CONTENU] Erreur listen");
         close(server_socket);
         exit(1);

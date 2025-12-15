@@ -76,13 +76,6 @@ int relay_to_server(int port, const char *request, char *response)
         return -1;
     }
 
-    // Configurer timeout de connexion
-    struct timeval timeout;
-    timeout.tv_sec = 2;
-    timeout.tv_usec = 0;
-    setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    setsockopt(server_socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-
     // Configuration adresse serveur spécialisé
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -119,7 +112,7 @@ int relay_to_server(int port, const char *request, char *response)
 
 void sigchld_handler(int sig)
 {
-    (void)sig; // Éviter l'avertissement de variable non utilisée
+    (void)sig;
     while (waitpid(-1, NULL, WNOHANG) > 0)
         ;
 }
@@ -131,7 +124,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     int authenticated = 0;
     time_t connection_start = time(NULL);
     
-    
+    (void)client_addr; // Éviter avertissement variable non utilisée
     user_count = load_users(users);
     if (user_count == 0) {
         send(client_socket, "Erreur: Aucun utilisateur", 26, 0);
@@ -385,7 +378,7 @@ int main(int argc, char *argv[])
     fclose(info_file);
     printf("[SERVER] Infos enregistrées dans %s\n", SERVER_INFO_FILE);
 
-    if (listen(proxy_socket, 5) < 0)
+    if (listen(proxy_socket, 10) < 0)
     {
         perror("[SERVER] Erreur listen");
         close(proxy_socket);

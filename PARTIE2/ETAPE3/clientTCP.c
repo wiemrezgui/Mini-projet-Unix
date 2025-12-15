@@ -60,7 +60,7 @@ int main() {
         exit(1);
     }
 
-    printf("[CLIENT]  Connecté au proxy\n\n");
+    printf("[CLIENT]  Connecté au Serveur\n\n");
 
     // AUTHENTIFICATION AVEC 3 TENTATIVES
     printf("═══ AUTHENTIFICATION ═══\n");
@@ -117,7 +117,7 @@ int main() {
             int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
             
             if (bytes_received <= 0) {
-                printf("[CLIENT] Proxy déconnecté\n");
+                printf("[CLIENT] Serveur déconnecté\n");
                 break;
             }
             

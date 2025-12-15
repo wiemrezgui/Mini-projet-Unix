@@ -90,12 +90,7 @@ void kill_all_servers() {
 // Gestionnaire de signal
 void signal_handler(int sig) {
     (void)sig;
-    printf("\n[PID %d] Réception du signal\n", getpid());
-    
-    if (getpid() == getppid() + 1) { // Le serveur principal
-        kill_all_servers();
-    }
-    
+    kill_all_servers();    
     unregister_my_pid();
     exit(0);
 }

@@ -33,7 +33,7 @@ void handle_request(int client_socket) {
         strcpy(elapsed_str, buffer);
     }
     
-    double elapsed = atof(elapsed_str); // Convertir en double
+    double elapsed = atof(elapsed_str); // Convertir chaine en double
     int hours = (int)elapsed / 3600;
     int minutes = ((int)elapsed % 3600) / 60;
     int seconds = (int)elapsed % 60;
@@ -59,6 +59,7 @@ int main() {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     register_my_pid();
+    // Créer la socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         perror("[SERVICE STATS] Erreur socket");
@@ -66,7 +67,7 @@ int main() {
     }
     
     int opt = 1;
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // Permet de réutiliser l'adresse immédiatement après la fermeture de la socket
     
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -79,7 +80,7 @@ int main() {
         exit(1);
     }
     
-    if (listen(server_socket, 5) < 0) {
+    if (listen(server_socket, 6) < 0) {
         perror("[SERVICE STATS] Erreur listen");
         close(server_socket);
         exit(1);

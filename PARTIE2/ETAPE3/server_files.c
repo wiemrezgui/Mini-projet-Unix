@@ -65,17 +65,12 @@ void handle_request(int client_socket) {
     
     int file_count = 0;
     while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue;
-        
         snprintf(buffer + offset, BUFFER_SIZE - offset, "- %s\n", entry->d_name);
         offset = strlen(buffer);
         file_count++;
-        
-        if (offset >= BUFFER_SIZE - 100) {
-            strcat(buffer, "... (liste tronquée)");
-            break;
-        }
+
     }
     
     if (file_count == 0) {
@@ -110,7 +105,7 @@ int main() {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT_FICHIERS);
-    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_addr.s_addr = INADDR_ANY; // ecouter sur toutes les interfaces 
     
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("[SERVICE FICHIERS] Erreur bind");
@@ -118,7 +113,7 @@ int main() {
         exit(1);
     }
     
-    if (listen(server_socket, 5) < 0) {
+    if (listen(server_socket, 6) < 0) {
         perror("[SERVICE FICHIERS] Erreur listen");
         close(server_socket);
         exit(1);

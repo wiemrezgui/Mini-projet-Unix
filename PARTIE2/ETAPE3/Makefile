@@ -67,63 +67,72 @@ clean: stop
 
 # Lancer tous les serveurs en arrière-plan
 run: all 
-	@echo "Démarrage de l'écosystème multiserveur..."
-	@echo "Configuration:"
-	@echo "  - Proxy principal: $(ADDR):$(PORT)"
-	@echo "  - Service Date: port $(PORT_DATE)"
-	@echo "  - Service Fichiers: port $(PORT_FILES)"
-	@echo "  - Service Contenu: port $(PORT_CONTENT)"
-	@echo "  - Service Stats: port $(PORT_STATS)"
+	@echo " Démarrage de l'écosystème multiserveur..."
+	@echo ""
+	@echo " CONFIGURATION :"
+	@echo "   Serveur principal : $(ADDR):$(PORT)"
+	@echo "   Service Date    : port $(PORT_DATE)"
+	@echo "   Service Fichiers: port $(PORT_FILES)"
+	@echo "   Service Contenu : port $(PORT_CONTENT)"
+	@echo "   Service Stats   : port $(PORT_STATS)"
+	@echo ""
+	
+	@echo " INSTRUCTIONS IMPORTANTES :"
+	@echo "=========================================="
+	@echo "Le système va démarrer TOUS les serveurs en arrière-plan."
+	@echo ""
+	@echo "Pour tester avec des clients, ouvrez de NOUVEAUX TERMINAUX et :"
+	@echo "   1. Lancer un client : ./clientTCP"
+	@echo "   2. Pour plusieurs clients : répétez dans d'autres terminaux"
+	@echo ""
+	@echo "Pour arrêter TOUT le système :"
+	@echo "   Dans CE terminal : Ctrl+C (serveur principal)"
+	@echo "   Puis : make stop"
+	@echo "=========================================="
 	@echo ""
 	
 	# Nettoyer l'ancien fichier PIDs
 	@rm -f servers-pids
 	
 	@echo "=== Démarrage des serveurs spécialisés ==="
-	@echo "Lancement serveur Date sur port $(PORT_DATE)..."
+	@echo " Lancement serveur Date sur port $(PORT_DATE)..."
 	@./server_date &
 	@sleep 1
 	
-	@echo "Lancement serveur Fichiers sur port $(PORT_FILES)..."
+	@echo " Lancement serveur Fichiers sur port $(PORT_FILES)..."
 	@./server_files &
 	@sleep 1
 	
-	@echo "Lancement serveur Contenu sur port $(PORT_CONTENT)..."
+	@echo " Lancement serveur Contenu sur port $(PORT_CONTENT)..."
 	@./server_content &
 	@sleep 1
 	
-	@echo "Lancement serveur Stats sur port $(PORT_STATS)..."
+	@echo " Lancement serveur Stats sur port $(PORT_STATS)..."
 	@./server_stats &
 	@sleep 2
 	
-	@echo "Tous les serveurs spécialisés démarrés en arrière-plan"
+	@echo " Tous les serveurs spécialisés démarrés en arrière-plan"
 	
 	# Vérification des ports
 	@echo ""
-	@echo "Vérification des serveurs..."
+	@echo " Vérification des serveurs..."
 	@for p in $(PORT_DATE) $(PORT_FILES) $(PORT_CONTENT) $(PORT_STATS); do \
 		if netstat -tuln 2>/dev/null | grep ":$$p " > /dev/null || \
 		   (netstat -ano 2>/dev/null | grep ":$$p " > /dev/null); then \
-			echo " Serveur sur port $$p: EN ÉCOUTE"; \
+			echo "   Port $$p:  EN ÉCOUTE"; \
 		else \
-			echo " Serveur sur port $$p: NON DÉMARRÉ"; \
+			echo "   Port $$p:  NON DÉMARRÉ"; \
 		fi; \
 	done
 	
-	# Vérification du fichier PIDs
 	@echo ""
-	@if [ -f "servers-pids" ]; then \
-		echo "PIDs enregistrés:"; \
-		cat servers-pids; \
-	else \
-		echo "Aucun PID enregistré dans servers-pids"; \
-	fi
-	@echo ""
-	
 	@echo "=== Démarrage du serveur principal (Proxy) ==="
-	@echo "Serveur principal sur $(ADDR):$(PORT)..."
-	@echo "Utilisez 'make stop' pour arrêter tous les serveurs"
-	@echo "ou Ctrl+C sur le serveur principal"
+	@echo " Serveur principal sur $(ADDR):$(PORT)..."
+	@echo ""
+	@echo " RAPPEL :"
+	@echo "   Pour tester : ouvrir un autre terminal et 'make client'"
+	@echo "   Pour arrêter : Ctrl+C puis 'make stop'"
+	@echo "=========================================="
 	@echo ""
 	./serverTCP $(ADDR) $(PORT)
 
