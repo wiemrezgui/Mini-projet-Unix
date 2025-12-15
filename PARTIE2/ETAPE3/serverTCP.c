@@ -78,8 +78,8 @@ int relay_to_server(int port, const char *request, char *response)
 
     // Configuration adresse serveur spécialisé
     memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
+    server_addr.sin_family = AF_INET; // IPv4
+    server_addr.sin_port = htons(port); //convertion
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     // Connexion au serveur spécialisé
@@ -98,14 +98,14 @@ int relay_to_server(int port, const char *request, char *response)
 
     // Recevoir la réponse
     memset(response, 0, BUFFER_SIZE);
-    int bytes_received = recv(server_socket, response, BUFFER_SIZE - 1, 0);
-    if (bytes_received <= 0)
+    int received_content = recv(server_socket, response, BUFFER_SIZE - 1, 0);
+    if (received_content <= 0)
     {
         close(server_socket);
         return -1;
     }
 
-    response[bytes_received] = '\0';
+    response[received_content] = '\0';
     close(server_socket);
     return 0;
 }
@@ -135,12 +135,12 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     // AUTHENTIFICATION
     while (!authenticated) {
         memset(buffer, 0, BUFFER_SIZE);
-        int bytes = recv(client_socket, buffer, BUFFER_SIZE, 0);
-        if (bytes <= 0) {
+        int data = recv(client_socket, buffer, BUFFER_SIZE, 0);//recevoir les données
+        if (data <= 0) {
             close(client_socket);
             return;
         }
-        buffer[bytes] = '\0';
+        buffer[data] = '\0';
         
         if (strncmp(buffer, "AUTH:", 5) == 0) {
             char *cred = buffer + 5;
@@ -167,12 +167,12 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
         send_menu(client_socket);
         
         memset(buffer, 0, BUFFER_SIZE);
-        int bytes = recv(client_socket, buffer, BUFFER_SIZE, 0);
-        if (bytes <= 0) {
+        int data = recv(client_socket, buffer, BUFFER_SIZE, 0);
+        if (data <= 0) {
             printf("[SERVER] %s déconnecté (perte connexion)\n", username);
             break;
         }
-        buffer[bytes] = '\0';
+        buffer[data] = '\0';
         
         printf("[SERVER] %s choisit: %s\n", username, buffer);
         
@@ -204,9 +204,9 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
             
             // Recevoir le répertoire
             memset(buffer, 0, BUFFER_SIZE);
-            bytes = recv(client_socket, buffer, BUFFER_SIZE, 0);
-            if (bytes > 0) {
-                buffer[bytes] = '\0';
+            data = recv(client_socket, buffer, BUFFER_SIZE, 0);
+            if (data > 0) {
+                buffer[data] = '\0';
                 
                 // Nettoyer le chemin (supprimer espaces/newlines)
                 buffer[strcspn(buffer, "\r\n")] = 0;
@@ -238,9 +238,9 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
             
             // Recevoir le fichier
             memset(buffer, 0, BUFFER_SIZE);
-            bytes = recv(client_socket, buffer, BUFFER_SIZE, 0);
-            if (bytes > 0) {
-                buffer[bytes] = '\0';
+            data = recv(client_socket, buffer, BUFFER_SIZE, 0);
+            if (data > 0) {
+                buffer[data] = '\0';
                 
                 // Nettoyer le chemin (supprimer espaces/newlines)
                 buffer[strcspn(buffer, "\r\n")] = 0;
@@ -304,8 +304,8 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
 }
 int main(int argc, char *argv[])
 {
-    int proxy_socket, client_socket;
-    struct sockaddr_in proxy_addr, client_addr;
+    int main_server_socket, client_socket;
+    struct sockaddr_in main_server_addr, client_addr;
     socklen_t client_len;
     char address[100];
     int port;
@@ -338,31 +338,31 @@ int main(int argc, char *argv[])
 
     signal(SIGCHLD, sigchld_handler);
 
-    proxy_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (proxy_socket < 0)
+    main_server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (main_server_socket < 0)
     {
         perror("[SERVER] Erreur création socket");
         exit(1);
     }
 
     int opt = 1;
-    setsockopt(proxy_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(main_server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    memset(&proxy_addr, 0, sizeof(proxy_addr));
-    proxy_addr.sin_family = AF_INET;
-    proxy_addr.sin_port = htons(port);
+    memset(&main_server_addr, 0, sizeof(main_server_addr));
+    main_server_addr.sin_family = AF_INET;
+    main_server_addr.sin_port = htons(port);
 
-    if (inet_pton(AF_INET, address, &proxy_addr.sin_addr) <= 0)
+    if (inet_pton(AF_INET, address, &main_server_addr.sin_addr) <= 0)
     {
         perror("[SERVER] Adresse IP invalide");
-        close(proxy_socket);
+        close(main_server_socket);
         exit(1);
     }
 
-    if (bind(proxy_socket, (struct sockaddr *)&proxy_addr, sizeof(proxy_addr)) < 0)
+    if (bind(main_server_socket, (struct sockaddr *)&main_server_addr, sizeof(main_server_addr)) < 0)
     {
         perror("[SERVER] Erreur bind");
-        close(proxy_socket);
+        close(main_server_socket);
         exit(1);
     }
 
@@ -371,17 +371,17 @@ int main(int argc, char *argv[])
     if (info_file == NULL)
     {
         perror("[SERVER] Erreur création fichier info");
-        close(proxy_socket);
+        close(main_server_socket);
         exit(1);
     }
     fprintf(info_file, "%s %d", address, port);
     fclose(info_file);
     printf("[SERVER] Infos enregistrées dans %s\n", SERVER_INFO_FILE);
 
-    if (listen(proxy_socket, 10) < 0)
+    if (listen(main_server_socket, 10) < 0)
     {
         perror("[SERVER] Erreur listen");
-        close(proxy_socket);
+        close(main_server_socket);
         remove(SERVER_INFO_FILE);
         exit(1);
     }
@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
     while (1)
     {
         client_len = sizeof(client_addr);
-        client_socket = accept(proxy_socket, (struct sockaddr *)&client_addr, &client_len);
+        client_socket = accept(main_server_socket, (struct sockaddr *)&client_addr, &client_len);
 
         if (client_socket < 0)
         {
@@ -401,14 +401,14 @@ int main(int argc, char *argv[])
 
         if (fork() == 0)
         {
-            close(proxy_socket);
+            close(main_server_socket);
             handle_client(client_socket, client_addr);
             exit(0);
         }
         close(client_socket);
     }
 
-    close(proxy_socket);
+    close(main_server_socket);
     remove(SERVER_INFO_FILE);
     unregister_my_pid();
     return 0;

@@ -3,20 +3,20 @@ CFLAGS = -Wall -Wextra -g
 LDFLAGS = 
 
 ADDR ?= 127.0.0.1
-PORT ?= 8080
+PORT ?= 8090
 
 # Ports des serveurs spécialisés
-PORT_DATE = 8081
-PORT_FILES = 8082
-PORT_CONTENT = 8083
-PORT_STATS = 8084
+PORT_DATE = 8091
+PORT_FILES = 8092
+PORT_CONTENT = 8093
+PORT_STATS = 8094
 
 # Tous les exécutables
 ALL = serverTCP server_date server_files server_content server_stats clientTCP
 
 .PHONY: all clean stop run help status
 
-all: $(ALL)
+all: help $(ALL)
 
 # serverTCP (serveur principal) - AJOUT de pid_manager.c
 serverTCP: serverTCP.c common.c pid_manager.c common.h
@@ -126,7 +126,7 @@ run: all
 	done
 	
 	@echo ""
-	@echo "=== Démarrage du serveur principal (Proxy) ==="
+	@echo "=== Démarrage du serveur principal (Main server) ==="
 	@echo " Serveur principal sur $(ADDR):$(PORT)..."
 	@echo ""
 	@echo " RAPPEL :"
