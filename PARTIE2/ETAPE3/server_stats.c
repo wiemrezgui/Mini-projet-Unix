@@ -27,14 +27,13 @@ void handle_request(int client_socket) {
     buffer[bytes] = '\0';
     
     // Extraire le temps
-    // Format attendu: "TIME 123" ou juste "123"
     if (strncmp(buffer, "TIME ", 5) == 0) {
         strcpy(elapsed_str, buffer + 5);
     } else {
         strcpy(elapsed_str, buffer);
     }
     
-    double elapsed = atof(elapsed_str);
+    double elapsed = atof(elapsed_str); // Convertir en double
     int hours = (int)elapsed / 3600;
     int minutes = ((int)elapsed % 3600) / 60;
     int seconds = (int)elapsed % 60;

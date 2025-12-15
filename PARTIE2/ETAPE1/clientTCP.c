@@ -52,7 +52,7 @@ int main()
         close(client_socket);
         exit(1);
     }
-
+    // etablir la connexion avec le serveur
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror(" [ CLIENT ] Erreur connexion au serveur");
         close(client_socket);

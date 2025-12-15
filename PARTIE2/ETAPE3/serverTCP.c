@@ -131,8 +131,6 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     int authenticated = 0;
     time_t connection_start = time(NULL);
     
-    printf("[SERVER] Connexion de %s:%d\n", 
-           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
     
     user_count = load_users(users);
     if (user_count == 0) {

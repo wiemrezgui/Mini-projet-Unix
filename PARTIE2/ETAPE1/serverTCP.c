@@ -7,13 +7,14 @@
 #include "common.h"
 
 void get_current_datetime(char* buffer) {
-    time_t rawtime;
-    struct tm* timeinfo;
+    time_t rawtime;          // Stocke le temps en secondes
+    struct tm* timeinfo;     // Structure pour temps décomposé
     
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
+    time(&rawtime);          // Récupère le temps actuel système
+    timeinfo = localtime(&rawtime);  // Convertit en temps local (fuseau horaire)
     
-    strftime(buffer, BUFFER_SIZE, "Date: %A %d %B %Y\nHeure: %H:%M:%S", timeinfo);
+    strftime(buffer, BUFFER_SIZE, 
+             "Date: %A %d %B %Y\nHeure: %H:%M:%S", timeinfo);
 }
 
 int main(int argc, char *argv[]) {
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s <adresse> <port>\n", argv[0]);
         exit(1);
     }
-    port = atoi(argv[2]);
+    port = atoi(argv[2]); // conversion du port en entier
     
     printf("=== SERVEUR TCP MONOSERVICE ===\n");
     printf(" [ SERVER ] Service disponible: Date/Heure du serveur\n");
@@ -93,10 +94,6 @@ int main(int argc, char *argv[]) {
             perror(" [ SERVER ] Erreur accept");
             continue;
         }
-        
-        printf(" [ SERVER ] Client connecté: %s:%d\n", 
-               inet_ntoa(client_addr.sin_addr), 
-               ntohs(client_addr.sin_port));
         
         // Boucle pour gérer plusieurs requêtes du même client
         int client_active = 1;

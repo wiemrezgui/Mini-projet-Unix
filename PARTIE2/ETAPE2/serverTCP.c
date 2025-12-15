@@ -30,7 +30,7 @@ void add_users() {
         printf("\n--- Client %d ---\n", i + 1);
         printf("Username: ");
         fgets(username, MAX_USERNAME_LEN, stdin);
-        username[strcspn(username, "\n")] = 0; // Supprimer le \n
+        username[strcspn(username, "\n")] = 0; // Supprimer le \n par la fonction de recherche de caractère
         
         printf("Mot de passe: ");
         fgets(password, MAX_PASSWORD_LEN, stdin);
@@ -60,28 +60,17 @@ void list_directory_files(const char* dir_path, char* buffer) {
     }
     
     snprintf(buffer, BUFFER_SIZE, "=== FICHIERS DU RÉPERTOIRE '%s' ===\n", dir_path);
-    offset = strlen(buffer);
-    
+    offset = strlen(buffer); // position actuelle dans le buffer
     while ((entry = readdir(dir)) != NULL) {
-        // FILTRER : ignorer les entrées . et ..
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue; // Passer à l'itération suivante
-        }
-        
         snprintf(buffer + offset, BUFFER_SIZE - offset, "- %s\n", entry->d_name);
         offset = strlen(buffer);
-        
-        if (offset >= BUFFER_SIZE - 100) {
-            strcat(buffer, "... (liste tronquée)");
-            break;
-        }
     }
     
     closedir(dir);
 }
 // Gestionnaire pour éviter les processus zombies
 void sigchld_handler(int sig) {
-    while (waitpid(-1, NULL, WNOHANG) > 0);
+    while (waitpid(-1, NULL, WNOHANG) > 0); // Nettoyer tous les processus fils terminés sans bloquer le serveur
 }
 
 // Fonction pour gérer un client
@@ -91,9 +80,6 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     char username[MAX_USERNAME_LEN];
     User users[MAX_USERS];
     int user_count;
-    
-    printf("[SERVER] Nouvelle connexion de %s:%d\n", 
-           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
     
     // Charger les utilisateurs
     user_count = load_users(users);
@@ -214,7 +200,8 @@ int main(int argc, char *argv[]) {
     }
     
     int opt = 1;
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    // utiliser l option generale du socket 
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // Pour réutiliser l'adresse IP rapidement après arrêt du serveur
     
     // Configuration adresse serveur
     memset(&server_addr, 0, sizeof(server_addr));
@@ -245,7 +232,7 @@ int main(int argc, char *argv[]) {
     fclose(info_file);
     
     // Mise en écoute
-    if (listen(server_socket, 5) < 0) {
+    if (listen(server_socket, 10) < 0) {
         perror("[SERVER] Erreur listen");
         close(server_socket);
         remove(SERVER_INFO_FILE);

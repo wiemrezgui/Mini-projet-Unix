@@ -10,8 +10,8 @@
 
 int main(int argc, char *argv[]) {
     int socketfd;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len;
+    struct sockaddr_in server_addr, client_addr; // adresse du client
+    socklen_t client_len; // taille de l'adresse du client
     char buffer[BUFFER_SIZE];
     int port, n, i;
     
@@ -83,11 +83,6 @@ int main(int argc, char *argv[]) {
         }
         
         buffer[recv_len] = '\0';
-        
-        // Affichage des informations du client
-        printf(" [ SERVER ] Message reçu de %s:%d\n", 
-               inet_ntoa(client_addr.sin_addr), 
-               ntohs(client_addr.sin_port));
         
         // Conversion du nombre reçu
         n = atoi(buffer); // Convertit la chaîne en nombre

@@ -46,13 +46,14 @@ int main() {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(server_port);
-    
+
+    // Conversion de l'adresse IP
     if (inet_pton(AF_INET, server_address, &server_addr.sin_addr) <= 0) {
         perror("[CLIENT] Adresse IP invalide");
         close(client_socket);
         exit(1);
     }
-
+    // etablir la connexion avec le serveur
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("[CLIENT] Erreur connexion serveur");
         close(client_socket);
